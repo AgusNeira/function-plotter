@@ -1,0 +1,27 @@
+{
+  "name": "function-plotter",
+  "version": "1.0.0",
+  "description": "This project is a web application meant to display the plots of functions written by the user.",
+  "main": "plotter.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx babel src/ -d build/ --presets=@babel/preset-env; npx browserify build/index.js > script.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AgusNeira/function-plotter.git"
+  },
+  "author": "Agustín Neira",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AgusNeira/function-plotter/issues"
+  },
+  "homepage": "https://github.com/AgusNeira/function-plotter#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.13.0",
+    "@babel/core": "^7.13.8",
+    "@babel/preset-env": "^7.13.9",
+    "browserify": "^17.0.0"
+  },
+  "browserslist": "> 0.25%, not dead"
+}
