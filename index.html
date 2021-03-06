@@ -3,10 +3,9 @@
         <title>Function Plotter</title>
 
         <meta charset='utf-8'/>
-        
-        <script src='split-screen.js'></script>
 
         <script src='https://d3js.org/d3.v6.min.js'></script>
+        <script src='script.js'></script>
 
         <link href='styles.css' rel='stylesheet' type='text/css'>
     </head>
@@ -14,11 +13,10 @@
         <div class='split-screen'>
             <div class='left-screen' id='input-space'>
                 <h1>Function Plotter</h1>
-                <input type='text' placeholder='Enter your function here'></input>
+                <input type='text' placeholder='Enter your function here' id='equation-input'></input>
             </div>
             <div id='resizer'></div>
             <div class='right-screen' id='plot-space'></div>
         </div>
-        <script src='plotter.js'></script>
     </body>
 </html>
