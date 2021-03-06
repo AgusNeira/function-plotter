@@ -1,4 +1,4 @@
-function splitScreen() {
+export function splitScreen() {
     let splitScreen = document.querySelector('.split-screen');
     let leftScreen = splitScreen.querySelector('.left-screen');
     let rightScreen = splitScreen.querySelector('.right-screen');

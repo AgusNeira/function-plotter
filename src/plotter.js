@@ -1,4 +1,4 @@
-function plotter() {
+export function plotter() {
     /*d3.select('#equation-input')
         .on('input', e => equationParser(e.target.value));*/
 
