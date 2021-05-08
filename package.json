@@ -4,8 +4,8 @@
   "description": "This project is a web application meant to display the plots of functions written by the user.",
   "main": "plotter.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npx babel src/ -d build/ --presets=@babel/preset-env; npx browserify build/index.js > script.js"
+    "test": "npx live-server --no-browser public",
+    "build": "npx babel src/ -d build/ --presets=@babel/preset-env; npx browserify build/index.js > public/script.js"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "@babel/cli": "^7.13.0",
     "@babel/core": "^7.13.8",
     "@babel/preset-env": "^7.13.9",
-    "browserify": "^17.0.0"
+    "browserify": "^17.0.0",
+    "live-server": "^1.2.1"
   },
   "browserslist": "> 0.25%, not dead"
 }
