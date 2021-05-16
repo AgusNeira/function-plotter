@@ -5,6 +5,7 @@
   "main": "plotter.js",
   "scripts": {
     "test": "npx live-server --no-browser public",
+    "build-nodemon": "npx nodemon --watch src --exec npm run build",
     "build": "npx babel src/ -d build/ --presets=@babel/preset-env; npx browserify build/index.js > public/script.js"
   },
   "repository": {
@@ -22,7 +23,11 @@
     "@babel/core": "^7.13.8",
     "@babel/preset-env": "^7.13.9",
     "browserify": "^17.0.0",
-    "live-server": "^1.2.1"
+    "live-server": "^1.2.1",
+    "nodemon": "^2.0.7"
   },
-  "browserslist": "> 0.25%, not dead"
+  "browserslist": "> 0.25%, not dead",
+  "dependencies": {
+    "neiras-expression-parser": "^0.0.2"
+  }
 }
