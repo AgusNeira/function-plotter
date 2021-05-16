@@ -2,3 +2,4 @@
 node_modules
 script.js
 build/
+public/*.js
