@@ -1,8 +1,10 @@
-const { evaluate } = require('./../../expression-parser/index.js');
+const { evaluate } = require('unknown-parser');
 
 export function plotter() {
-    /*d3.select('#equation-input')
-        .on('input', e => equationParser(e.target.value));*/
+    let str, expression;
+
+    d3.select('#equation-input')
+        .on('input', handleInput(1000));
 
     let root = d3.select('#plot-space'),
         size = root.node().getBoundingClientRect(),
@@ -110,6 +112,29 @@ export function plotter() {
                 rescale(factorAcc);
                 factorAcc = 1.0;
             }, delay);
+        };
+    }
+
+    function delayed(fn, delay) {
+        let timeout = 0;
+        
+        return (...args) => {
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                fn(...args);
+                timeout = null;
+            }, delay);
+        }
+    }
+
+    function handleInput(throttleDelay = 0) {
+        let timeout = 0;
+        return event => {
+            if (timeout) clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                console.log('input event incoming');
+                console.log(event.target.value);
+            }, throttleDelay);
         };
     }
 }

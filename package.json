@@ -28,6 +28,6 @@
   },
   "browserslist": "> 0.25%, not dead",
   "dependencies": {
-    "neiras-expression-parser": "^0.0.2"
+    "unknown-parser": "^1.0.0"
   }
 }
