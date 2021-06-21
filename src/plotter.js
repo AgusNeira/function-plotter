@@ -1,11 +1,6 @@
 const { evaluate } = require('unknown-parser');
 
 export function plotter() {
-    let str, expression;
-
-    d3.select('#equation-input')
-        .on('input', handleInput(1000));
-
     let root = d3.select('#plot-space'),
         size = root.node().getBoundingClientRect(),
         aspectRatio = size.height / size.width,
@@ -14,21 +9,6 @@ export function plotter() {
         data = [],
         zoomDelay = 200,
         zoomInterval = 1.25;
-
-    // Load data with linear function
-    function load() {
-        data = [];
-        let resolutionScale = d3.scaleLinear()  // used to break the current
-            .domain([0, resolution])            // into n evenly separated
-            .range(plotRanges[0]);              // points
-
-        for (let i = 0; i <= resolution; i++) {
-            data.push({
-                x: resolutionScale(i),
-                y: resolutionScale(i)**3
-            });
-        }
-    }
 
     let svg = d3.select('#plot-space')
         .append('svg')
@@ -51,7 +31,6 @@ export function plotter() {
 
     let defTr = d3.transition().duration(200);
 
-    load();
     let path = svg.append('path')
         .datum(data)
         .attr('class', 'plot-line')
@@ -69,27 +48,51 @@ export function plotter() {
         .attr('transform', `translate(${size.width / 2}, 0)`)
         .call(yAxis);
 
+    let expression;
+    d3.select('#equation-input')
+        .on('input', handleInput(1000));
+    
+    handleInput()();
+    draw();
+
+    function draw() {
+        if (!expression) return;
+        data = [];
+        let resolutionScale = d3.scaleLinear()  // used to break the current
+            .domain([0, resolution])            // into n evenly separated
+            .range(plotRanges[0]);              // points
+
+        for (let i = 0; i <= resolution; i++) {
+            if (expression.unknowns.length === 1) {
+                let unkname = expression.unknowns[0];
+                data.push({
+                    x: resolutionScale(i),
+                    y: expression.calc({ [unkname]: resolutionScale(i) })
+                });
+            } else {
+                data.push({
+                    x: resolutionScale(i),
+                    y: expresion.calc()
+                });
+            }
+        }
+        path.datum(data);
+        svg.select('.plot-line')
+            .attr('d', line);
+    }
+
     function resize() {
         xScale.domain(plotRanges[0]);
         yScale.domain(plotRanges[1]);
         svg.select('.xaxis').transition().call(xAxis);
         svg.select('.yaxis').transition().call(yAxis);
-        redraw();
+        draw();
     }
 
     function SVGResizeHandler(event) {
         size = svg.node().getBoundingClientRect();
         svg.attr('viewBox', [0, 0, size.width, size.height]);
         resize();
-    }
-    
-    function redraw() {
-        load();
-        path.datum(data);
-        console.log(data);
-        console.log(plotRanges);
-        svg.select('.plot-line')
-            .attr('d', line);
     }
 
     function rescale(factor) {
@@ -129,11 +132,22 @@ export function plotter() {
 
     function handleInput(throttleDelay = 0) {
         let timeout = 0;
-        return event => {
+        return () => {
+            let inputStr = d3.select('#equation-input').property('value');
             if (timeout) clearTimeout(timeout);
             timeout = setTimeout(() => {
-                console.log('input event incoming');
-                console.log(event.target.value);
+                console.log('equation found');
+                console.log(inputStr);
+                try {
+                    expression = evaluate(inputStr);
+                    if (expression.unknowns.length > 1) {
+                        console.log('2D plotting supports up to one unknown');
+                        expression = null;
+                    }
+                    draw();
+                } catch (e) {
+                    console.log(e);
+                }
             }, throttleDelay);
         };
     }
