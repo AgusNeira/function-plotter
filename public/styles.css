@@ -65,3 +65,13 @@ svg text {
     min-width: 5px;
     box-shadow:  5px 0 5px #ccc;
 }
+
+.xaxis line, .xaxis path, .xaxis text,
+.yaxis line, .yaxis path, .yaxis text {
+    stroke: grey;
+}
+
+.plot-line {
+    stroke-width: 3px;
+    cursor: pointer;
+}

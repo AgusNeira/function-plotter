@@ -4,11 +4,19 @@ export function plotter() {
     let root = d3.select('#plot-space'),
         size = root.node().getBoundingClientRect(),
         aspectRatio = size.height / size.width,
-        resolution = 200, // points used to draw the function
+        resolution = 500, // points used to draw the function
+        tickAmount = 20,
         plotRanges = [[-100, 100], [-100 * aspectRatio, 100 * aspectRatio]],
         data = [],
         zoomDelay = 200,
         zoomInterval = 1.25;
+
+    let xTicks = Array(tickAmount).fill(0).map((x, i) => i / tickAmount)
+        .filter(x => x < 1 && x > 0 && x !== 0.5);
+    let yTicks = Array(tickAmount).fill(0)
+        .map((y, i) => (i / tickAmount - 0.5) / aspectRatio + 0.5)
+        .filter(y => y > 0 && y < 1 && y !== 0.5);
+    console.log(aspectRatio);
 
     let svg = d3.select('#plot-space')
         .append('svg')
@@ -21,8 +29,14 @@ export function plotter() {
     let xScale = d3.scaleLinear().domain(plotRanges[0]).range([0, size.width]);
     let yScale = d3.scaleLinear().domain(plotRanges[1]).range([size.height, 0]);
 
-    let xAxis = g => g.call(d3.axisBottom(xScale));
-    let yAxis = g => g.call(d3.axisLeft(yScale));
+    let xAxis = g => {
+        let i = d3.interpolate(...plotRanges[0]);
+        g.call(d3.axisBottom(xScale).tickValues(xTicks.map(i)));
+    };
+    let yAxis = g => {
+        let i = d3.interpolate(...plotRanges[1]);
+        g.call(d3.axisLeft(yScale).tickValues(yTicks.map(i)));
+    }
 
     let line = d3.line()
         .defined(d => !isNaN(d.x) && !isNaN(d.y))
@@ -50,7 +64,7 @@ export function plotter() {
 
     let expression;
     d3.select('#equation-input')
-        .on('input', handleInput(1000));
+        .on('input', handleInput(500));
     
     handleInput()();
     draw();
@@ -78,6 +92,7 @@ export function plotter() {
         }
         path.datum(data);
         svg.select('.plot-line')
+            .transition()
             .attr('d', line);
     }
 
@@ -91,6 +106,7 @@ export function plotter() {
 
     function SVGResizeHandler(event) {
         size = svg.node().getBoundingClientRect();
+        aspectRatio = size.height / size.width;
         svg.attr('viewBox', [0, 0, size.width, size.height]);
         resize();
     }
