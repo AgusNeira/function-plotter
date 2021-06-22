@@ -86,7 +86,7 @@ export function plotter() {
             } else {
                 data.push({
                     x: resolutionScale(i),
-                    y: expresion.calc()
+                    y: expression.calc({})
                 });
             }
         }
