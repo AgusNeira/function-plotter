@@ -45,14 +45,6 @@ export function plotter() {
 
     let defTr = d3.transition().duration(200);
 
-    let path = svg.append('path')
-        .datum(data)
-        .attr('class', 'plot-line')
-        .attr('d', line)
-        .attr('fill', 'none')
-        .attr('stroke', 'black')
-        .attr('stroke-width', 1.5);
-
     svg.append('g')
         .attr('class', 'xaxis')
         .attr('transform', `translate(0, ${size.height / 2})`)
@@ -62,6 +54,14 @@ export function plotter() {
         .attr('transform', `translate(${size.width / 2}, 0)`)
         .call(yAxis);
 
+    let path = svg.append('path')
+        .datum(data)
+        .attr('class', 'plot-line')
+        .attr('d', line)
+        .attr('fill', 'none')
+        .attr('stroke', 'black')
+        .attr('stroke-width', 1.5);
+
     let expression;
     d3.select('#equation-input')
         .on('input', handleInput(500));
@@ -70,7 +70,11 @@ export function plotter() {
     draw();
 
     function draw() {
-        if (!expression) return;
+        if (!expression) {
+            path.attr('display', 'none');
+            return;
+        }
+
         data = [];
         let resolutionScale = d3.scaleLinear()  // used to break the current
             .domain([0, resolution])            // into n evenly separated
@@ -90,6 +94,7 @@ export function plotter() {
                 });
             }
         }
+        path.attr('display', '');
         path.datum(data);
         svg.select('.plot-line')
             .transition()
@@ -149,21 +154,37 @@ export function plotter() {
     function handleInput(throttleDelay = 0) {
         let timeout = 0;
         return () => {
-            let inputStr = d3.select('#equation-input').property('value');
             if (timeout) clearTimeout(timeout);
             timeout = setTimeout(() => {
+                let inputStr = d3.select('#equation-input').property('value')
+                    .replace('²', '^2')
+                    .replace('³', '^3');
+                
+                if (inputStr === '') {
+                    expression = null;
+                    draw();
+                    return;
+                }
+
                 console.log('equation found');
                 console.log(inputStr);
                 try {
                     expression = evaluate(inputStr);
                     if (expression.unknowns.length > 1) {
                         console.log('2D plotting supports up to one unknown');
+                        d3.select('#equation-input').attr('class', 'wrong-syntax');
+                        d3.select('#input-message').text('2D plotting supports up to one unknown');
                         expression = null;
+                    } else {
+                        d3.select('#equation-input').attr('class', '');
+                        d3.select('#input-message').text('');
                     }
-                    draw();
                 } catch (e) {
+                    d3.select('#equation-input').attr('class', 'wrong-syntax');
+                    d3.select('#input-message').text(e.message);
                     console.log(e);
                 }
+                draw();
             }, throttleDelay);
         };
     }
