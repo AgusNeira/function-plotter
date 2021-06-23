@@ -3,8 +3,8 @@
         <title>Function Plotter</title>
 
         <meta charset='utf-8'/>
-
-        <script src='https://d3js.org/d3.v6.min.js'></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
         <script src='script.js'></script>
 
         <link href='styles.css' rel='stylesheet' type='text/css'>
@@ -14,6 +14,7 @@
             <div class='left-screen' id='input-space'>
                 <h1>Function Plotter</h1>
                 <input type='text' placeholder='Enter your function here' id='equation-input'></input>
+                <p id='input-message'></p>
             </div>
             <div id='resizer'></div>
             <div class='right-screen' id='plot-space'></div>

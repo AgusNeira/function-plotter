@@ -2,6 +2,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: sans-serif;
 }
 
 .split-screen {
@@ -17,9 +18,7 @@
 }
 
 .left-screen h1 {
-    font-size: 24px;
-    font-family: sans-serif;
-    font-weight: normal;
+    font-size: 24px;    font-weight: normal;
     text-align: center;
 
     display: block;
@@ -28,16 +27,32 @@
     margin-bottom: 20px;
 }
 
-.left-screen input {
-    width: 100%;
+#equation-input {
+    width: 94%;
+    margin-left: 3%;
+    border-radius: 3px;
     border: none;
     box-shadow: inset 0 0 5px #ccc;
     padding: 15px;
     font-size: 16px;
 }
 
-.left-screen input:hover {
+#equation-input:hover {
     box-shadow: inset 0 0 7px #999;
+}
+
+#equation-input.wrong-syntax {
+    outline: 2px solid red;
+    box-shadow: 0 0 3px red;
+}
+
+#input-message {
+    display: block;
+    width: 100%;
+    padding: 5px 10%;
+    color: red;
+    text-align: center;
+    font-size: 12px;
 }
 
 .right-screen {
@@ -64,4 +79,15 @@ svg text {
     cursor: col-resize;
     min-width: 5px;
     box-shadow:  5px 0 5px #ccc;
+}
+
+.xaxis line, .xaxis path, .xaxis text,
+.yaxis line, .yaxis path, .yaxis text {
+    stroke: grey;
+}
+
+.plot-line {
+    stroke-width: 3px;
+    cursor: pointer;
+    z-index: 1000;
 }
