@@ -46,21 +46,46 @@ export function plotter() {
 
         // The last value (exceeding the axis) the the one crossing the Y-Axis are removed
         tickValues.pop();
-        tickValues = tickValues.filter(x => x - 0 < tickInterval / 10);
+        tickValues = tickValues.filter(x => Math.abs(x - 0) > tickInterval / 10);
 
         // Tick values are applied to the axis and formatted properly
         g.call(d3
             .axisBottom(xScale)
             .tickValues(tickValues)
             .tickFormat(d => {
-                if (Math.abs(Math.log10(d)) >= 3) return d.toExponential(2)
+                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
                 else return d.toPrecision(3);
             })
         );
     };
     let yAxis = g => {
         let yRange = plotRanges[1][1] - plotRanges[1][0];
+        
+        // The interval is calculated similarly to the one in the previous function.
+        // The plot ranges for the X-axis are used to match the values of the ticks
+        // and thus have a square grid.
+        // The amount of ticks wanted is adjusted to the dimensions of the Y-axis
+        // to make it similar to the another one
+        let tickInterval = Math.pow(10, Math.round(Math.log10(plotRanges[0][1] - plotRanges[0][0]) - 1));
+        while (yRange / tickInterval < 8 * aspectRatio) tickInterval /= 2;
+        while (yRange / tickInterval > 25 * aspectRatio) tickInterval *= 2;
 
+        // Loading the tick values, similarly to the other axis
+        let tickValues = [ plotRanges[1][0] - plotRanges[1][0] % tickInterval ];
+        while (tickValues[tickValues.length - 1] < plotRanges[1][1])
+            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
+
+        tickValues.pop();
+        tickValues = tickValues.filter(y => Math.abs(y - 0) > tickInterval / 10);
+
+        g.call(d3
+            .axisLeft(yScale)
+            .tickValues(tickValues)
+            .tickFormat(d => {
+                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
+                else return d.toPrecision(3);
+            })
+        );
     }
 
     let line = d3.line()
