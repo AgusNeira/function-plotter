@@ -6,7 +6,7 @@ export function plotter() {
         aspectRatio = size.height / size.width,
         resolution = 500, // points used to draw the function
         tickAmount = 20,
-        plotRanges = [[-100, 100], [-100 * aspectRatio, 100 * aspectRatio]],
+        plotRanges = [[-109, 109], [-109 * aspectRatio, 109 * aspectRatio]],
         data = [],
         zoomDelay = 200,
         zoomInterval = 1.25;
@@ -16,7 +16,6 @@ export function plotter() {
     let yTicks = Array(tickAmount).fill(0)
         .map((y, i) => (i / tickAmount - 0.5) / aspectRatio + 0.5)
         .filter(y => y > 0 && y < 1 && y !== 0.5);
-    console.log(aspectRatio);
 
     let svg = d3.select('#plot-space')
         .append('svg')
@@ -30,12 +29,63 @@ export function plotter() {
     let yScale = d3.scaleLinear().domain(plotRanges[1]).range([size.height, 0]);
 
     let xAxis = g => {
-        let i = d3.interpolate(...plotRanges[0]);
-        g.call(d3.axisBottom(xScale).tickValues(xTicks.map(i)));
+        let xRange = plotRanges[0][1] - plotRanges[0][0];
+
+        // The interval between ticks will be a power of 10.
+        // If there are too many or too little ticks, the interval
+        // is adjusted by powers of 2
+        let tickInterval = Math.pow(10, Math.round(Math.log10(xRange) - 1));
+        while (xRange / tickInterval < 8) tickInterval /= 2;
+        while (xRange / tickInterval > 25) tickInterval *= 2;
+
+        // The values for the ticks are filled from left to right, starting
+        // by a multiple of the interval
+        let tickValues = [ plotRanges[0][0] - plotRanges[0][0] % tickInterval ];
+        while (tickValues[tickValues.length - 1] < plotRanges[0][1]) 
+            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
+
+        // The last value (exceeding the axis) the the one crossing the Y-Axis are removed
+        tickValues.pop();
+        tickValues = tickValues.filter(x => Math.abs(x - 0) > tickInterval / 10);
+
+        // Tick values are applied to the axis and formatted properly
+        g.call(d3
+            .axisBottom(xScale)
+            .tickValues(tickValues)
+            .tickFormat(d => {
+                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
+                else return d.toPrecision(3);
+            })
+        );
     };
     let yAxis = g => {
-        let i = d3.interpolate(...plotRanges[1]);
-        g.call(d3.axisLeft(yScale).tickValues(yTicks.map(i)));
+        let yRange = plotRanges[1][1] - plotRanges[1][0];
+        
+        // The interval is calculated similarly to the one in the previous function.
+        // The plot ranges for the X-axis are used to match the values of the ticks
+        // and thus have a square grid.
+        // The amount of ticks wanted is adjusted to the dimensions of the Y-axis
+        // to make it similar to the another one
+        let tickInterval = Math.pow(10, Math.round(Math.log10(plotRanges[0][1] - plotRanges[0][0]) - 1));
+        while (yRange / tickInterval < 8 * aspectRatio) tickInterval /= 2;
+        while (yRange / tickInterval > 25 * aspectRatio) tickInterval *= 2;
+
+        // Loading the tick values, similarly to the other axis
+        let tickValues = [ plotRanges[1][0] - plotRanges[1][0] % tickInterval ];
+        while (tickValues[tickValues.length - 1] < plotRanges[1][1])
+            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
+
+        tickValues.pop();
+        tickValues = tickValues.filter(y => Math.abs(y - 0) > tickInterval / 10);
+
+        g.call(d3
+            .axisLeft(yScale)
+            .tickValues(tickValues)
+            .tickFormat(d => {
+                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
+                else return d.toPrecision(3);
+            })
+        );
     }
 
     let line = d3.line()
