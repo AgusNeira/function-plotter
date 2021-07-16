@@ -81,6 +81,10 @@ svg text {
     box-shadow:  5px 0 5px #ccc;
 }
 
+.xaxis, .yaxis {
+    pointer-events: all;    
+}
+
 .xaxis line, .xaxis path, .xaxis text,
 .yaxis line, .yaxis path, .yaxis text {
     stroke: grey;
