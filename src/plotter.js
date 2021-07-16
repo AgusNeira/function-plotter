@@ -30,31 +30,37 @@ export function plotter() {
 
     let xAxis = g => {
         let xRange = plotRanges[0][1] - plotRanges[0][0];
+
+        // The interval between ticks will be a power of 10.
+        // If there are too many or too little ticks, the interval
+        // is adjusted by powers of 2
         let tickInterval = Math.pow(10, Math.round(Math.log10(xRange) - 1));
         while (xRange / tickInterval < 8) tickInterval /= 2;
         while (xRange / tickInterval > 25) tickInterval *= 2;
 
+        // The values for the ticks are filled from left to right, starting
+        // by a multiple of the interval
         let tickValues = [ plotRanges[0][0] - plotRanges[0][0] % tickInterval ];
-
-        console.log(plotRanges[0]);
         while (tickValues[tickValues.length - 1] < plotRanges[0][1]) 
             tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
 
+        // The last value (exceeding the axis) the the one crossing the Y-Axis are removed
         tickValues.pop();
-        tickValues = tickValues.filter(x => x !== 0);
+        tickValues = tickValues.filter(x => x - 0 < tickInterval / 10);
 
-       g.call(d3
-           .axisBottom(xScale)
-           .tickValues(tickValues)
-           .tickFormat(d => {
-               if (Math.abs(Math.log10(d)) >= 3) return d.toExponential(2)
-               else return d.toPrecision(3);
-           })
-       );
+        // Tick values are applied to the axis and formatted properly
+        g.call(d3
+            .axisBottom(xScale)
+            .tickValues(tickValues)
+            .tickFormat(d => {
+                if (Math.abs(Math.log10(d)) >= 3) return d.toExponential(2)
+                else return d.toPrecision(3);
+            })
+        );
     };
     let yAxis = g => {
-        let i = d3.interpolate(...plotRanges[1]);
-        g.call(d3.axisLeft(yScale).tickValues(yTicks.map(i)));
+        let yRange = plotRanges[1][1] - plotRanges[1][0];
+
     }
 
     let line = d3.line()
