@@ -23,7 +23,7 @@ export function plotter() {
         .attr('viewBox', [0, 0, size.width, size.height])
         .attr('preserveAspectRatio', 'xMidYMid slice')
         .on('resize', SVGResizeHandler)
-        .on('wheel', delayedRescale(zoomDelay));
+        .on('wheel', delayedRescale(zoomDelay, rescaleAll));
 
     let xScale = d3.scaleLinear().domain(plotRanges[0]).range([0, size.width]);
     let yScale = d3.scaleLinear().domain(plotRanges[1]).range([size.height, 0]);
@@ -98,11 +98,24 @@ export function plotter() {
     svg.append('g')
         .attr('class', 'xaxis')
         .attr('transform', `translate(0, ${size.height / 2})`)
-        .call(xAxis);
+        .call(xAxis)
+        .append('rect')
+            .attr('x', 0).attr('width', size.width)
+            .attr('y', -20).attr('height', 40)
+            .attr('fill', 'transparent')
+            .style('z-index', 1000)
+            .on('wheel', delayedRescale(zoomDelay, rescaleX));
+
     svg.append('g')
         .attr('class', 'yaxis')
         .attr('transform', `translate(${size.width / 2}, 0)`)
-        .call(yAxis);
+        .call(yAxis)
+        .append('rect')
+            .attr('x', -30).attr('width', 60)
+            .attr('y', 0).attr('height', size.height)
+            .attr('fill', 'transparent')
+            .style('z-index', 1000)
+            .on('wheel', delayedRescale(zoomDelay, rescaleY));
 
     let path = svg.append('path')
         .datum(data)
@@ -166,24 +179,43 @@ export function plotter() {
         resize();
     }
 
-    function rescale(factor) {
-        plotRanges = plotRanges.map(([min, max]) => [min * factor, max * factor]);
+    function rescaleAll(factor) {
+        let midpoints = plotRanges.map(([min, max]) => (max + min) / 2);
+        let delta = (midpoints[0] - plotRanges[0][0]) * factor;
+        plotRanges = midpoints.map(mid => [mid - delta, mid + delta]);
         resize();
+        console.log('all')
     }
+    function rescaleX (factor) {
+        let midpointX = (plotRanges[0][0] + plotRanges[0][1]) / 2;
+        let deltaX = (midpointX - plotRanges[0][0]) * factor;
+        plotRanges[0] = [midpointX - deltaX, midpointX + deltaX];
+        resize();
+        console.log('x');
+    }
+    function rescaleY (factor) {
+        let midpointY = (plotRanges[1][0] + plotRanges[1][1]) / 2;
+        let deltaY = (midpointY - plotRanges[1][0]) * factor;
+        plotRanges[1] = [midpointY - deltaY, midpointY + deltaY];
+        resize();
+        console.log('y');
+    }
+
     // the rescaling is performed only after a set delay time has passed
     // without wheel events being triggered, and accumulating the
     // rescaling factor, to avoid excessive rescales
-    function delayedRescale(delay) {
+    function delayedRescale(delay, rescaleFn) {
         let timeout = 0;
         let factorAcc = 1.0;
 
         return event => {
+            event.stopPropagation();
             if (event.deltaY < 0) factorAcc /= zoomInterval;
             else factorAcc *= zoomInterval;
 
             if (timeout) clearTimeout(timeout);
             timeout = setTimeout (() => {
-                rescale(factorAcc);
+                rescaleFn(factorAcc);
                 factorAcc = 1.0;
             }, delay);
         };
