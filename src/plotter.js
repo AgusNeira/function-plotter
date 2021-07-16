@@ -6,7 +6,7 @@ export function plotter() {
         aspectRatio = size.height / size.width,
         resolution = 500, // points used to draw the function
         tickAmount = 20,
-        plotRanges = [[-100, 100], [-100 * aspectRatio, 100 * aspectRatio]],
+        plotRanges = [[-109, 109], [-109 * aspectRatio, 109 * aspectRatio]],
         data = [],
         zoomDelay = 200,
         zoomInterval = 1.25;
@@ -16,7 +16,6 @@ export function plotter() {
     let yTicks = Array(tickAmount).fill(0)
         .map((y, i) => (i / tickAmount - 0.5) / aspectRatio + 0.5)
         .filter(y => y > 0 && y < 1 && y !== 0.5);
-    console.log(aspectRatio);
 
     let svg = d3.select('#plot-space')
         .append('svg')
@@ -30,8 +29,28 @@ export function plotter() {
     let yScale = d3.scaleLinear().domain(plotRanges[1]).range([size.height, 0]);
 
     let xAxis = g => {
-        let i = d3.interpolate(...plotRanges[0]);
-        g.call(d3.axisBottom(xScale).tickValues(xTicks.map(i)));
+        let xRange = plotRanges[0][1] - plotRanges[0][0];
+        let tickInterval = Math.pow(10, Math.round(Math.log10(xRange) - 1));
+        while (xRange / tickInterval < 8) tickInterval /= 2;
+        while (xRange / tickInterval > 25) tickInterval *= 2;
+
+        let tickValues = [ plotRanges[0][0] - plotRanges[0][0] % tickInterval ];
+
+        console.log(plotRanges[0]);
+        while (tickValues[tickValues.length - 1] < plotRanges[0][1]) 
+            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
+
+        tickValues.pop();
+        tickValues = tickValues.filter(x => x !== 0);
+
+       g.call(d3
+           .axisBottom(xScale)
+           .tickValues(tickValues)
+           .tickFormat(d => {
+               if (Math.abs(Math.log10(d)) >= 3) return d.toExponential(2)
+               else return d.toPrecision(3);
+           })
+       );
     };
     let yAxis = g => {
         let i = d3.interpolate(...plotRanges[1]);
