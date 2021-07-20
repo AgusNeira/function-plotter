@@ -82,16 +82,24 @@ svg text {
 }
 
 .xaxis, .yaxis {
-    pointer-events: all;    
+    z-index: 100;   
 }
 
 .xaxis line, .xaxis path, .xaxis text,
 .yaxis line, .yaxis path, .yaxis text {
-    stroke: grey;
+    stroke: black;
 }
 
 .plot-line {
     stroke-width: 3px;
     cursor: pointer;
     z-index: 1000;
+}
+
+.xgrid line, .ygrid line {
+    stroke: #ccc;
+    stroke-width: 1px;
+}
+line.thick-line {
+    stroke: #666;
 }
