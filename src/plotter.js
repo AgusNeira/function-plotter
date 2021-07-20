@@ -22,94 +22,88 @@ export function plotter() {
     let xScale = d3.scaleLinear().domain(plotRanges[0]).range([0, size.width]);
     let yScale = d3.scaleLinear().domain(plotRanges[1]).range([size.height, 0]);
 
+    // Gives the proper interval within a given range, so that it is
+    // a power of 10 and can be distributed in the range between
+    // `lowerBound` and `upperBound` times
+    let interval = (domain, [ min, max ]) => {
+        let range = domain[1] - domain[0];
+        let interval = Math.pow(10, Math.round(Math.log10(range) - 1));
+        while (range / interval < min) interval /= 2;
+        while (range / interval > max) interval *= 2;
+        return interval;
+    }
+    let fillRange = (interval, [ lowerBound, upperBound ]) => {
+        let values = [ lowerBound - lowerBound % interval ];
+        while (values[values.length - 1] < upperBound) 
+            values.push(values[values.length - 1] + interval);
+        values.pop();
+        return values;
+    }
+    let numberFormatting = num => {
+        let digits = Math.abs(Math.log10(Math.abs(num)));
+        if (digits >= 3) return num.toExponential(2)
+        else if (num % 1 !== 0) return num.toPrecision(Math.floor(digits) + 2);
+        else return num.toPrecision(Math.floor(digits) + 1);
+    }
+
     let xAxis = g => {
-        let xRange = plotRanges[0][1] - plotRanges[0][0];
-
-        // The interval between ticks will be a power of 10.
-        // If there are too many or too little ticks, the interval
-        // is adjusted by powers of 2
-        let tickInterval = Math.pow(10, Math.round(Math.log10(xRange) - 1));
-        while (xRange / tickInterval < 8) tickInterval /= 2;
-        while (xRange / tickInterval > 25) tickInterval *= 2;
-
-        // The values for the ticks are filled from left to right, starting
-        // by a multiple of the interval
-        let tickValues = [ plotRanges[0][0] - plotRanges[0][0] % tickInterval ];
-        while (tickValues[tickValues.length - 1] < plotRanges[0][1]) 
-            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
-
-        // The last value (exceeding the axis) the the one crossing the Y-Axis are removed
-        tickValues.pop();
+        let tickInterval = interval(plotRanges[0], [8, 25]);
+        let tickValues = fillRange(tickInterval, plotRanges[0]);
+        // Remove the tick surrounding zero
         tickValues = tickValues.filter(x => Math.abs(x - 0) > tickInterval / 10);
 
         // Tick values are applied to the axis and formatted properly
         g.call(d3
             .axisBottom(xScale)
             .tickValues(tickValues)
-            .tickFormat(d => {
-                let digits = Math.abs(Math.log10(Math.abs(d)));
-                if (digits >= 3) return d.toExponential(2)
-                else return d.toPrecision(Math.floor(digits) + 1);
-            })
+            .tickFormat(numberFormatting)
             .tickSize(0)
             .tickPadding(8)
         );
-        xGrid(tickValues);
     };
     let yAxis = g => {
-        let yRange = plotRanges[1][1] - plotRanges[1][0];
-        
-        // The interval is calculated similarly to the one in the previous function.
-        // The plot ranges for the X-axis are used to match the values of the ticks
-        // and thus have a square grid.
-        // The amount of ticks wanted is adjusted to the dimensions of the Y-axis
-        // to make it similar to the another one
-        let tickInterval = Math.pow(10, Math.round(Math.log10(plotRanges[0][1] - plotRanges[0][0]) - 1));
-        while (yRange / tickInterval < 8 * aspectRatio) tickInterval /= 2;
-        while (yRange / tickInterval > 25 * aspectRatio) tickInterval *= 2;
-
-        // Loading the tick values, similarly to the other axis
-        let tickValues = [ plotRanges[1][0] - plotRanges[1][0] % tickInterval ];
-        while (tickValues[tickValues.length - 1] < plotRanges[1][1])
-            tickValues.push(tickValues[tickValues.length - 1] + tickInterval);
-
-        tickValues.pop();
+        let tickInterval = interval(plotRanges[0], [8, 25]);
+        let tickValues = fillRange(tickInterval, plotRanges[1]);
+        // Remove the tick surrounding zero
         tickValues = tickValues.filter(y => Math.abs(y - 0) > tickInterval / 10);
 
         g.call(d3
             .axisLeft(yScale)
             .tickValues(tickValues)
-            .tickFormat(d => {
-                let digits = Math.abs(Math.log10(Math.abs(d)));
-                if (digits >= 3) return d.toExponential(2)
-                else return d.toPrecision(Math.floor(digits) + 1);
-            })
+            .tickFormat(numberFormatting)
             .tickSize(0)
             .tickPadding(5)
         );
-        yGrid(tickValues);
     }
-    let xGrid = tickValues => {
-        console.log('reached')
-        console.log(tickValues);
-        svg.select('.xgrid')
-            .selectAll('line')
-            .data(tickValues)
-            .join(g => g.append('line'))
-            .attr('x1', d => xScale(d))
-            .attr('x2', d => xScale(d))
-            .attr('y1', 0)
-            .attr('y2', size.height);
+    let xGrid = g => {
+        let gridInterval = interval(plotRanges[0], [8, 25]) / 5;
+        let gridValues = fillRange(gridInterval, plotRanges[0]);
+        g.selectAll('line')
+            .data(gridValues)
+            .join('line')
+                .attr('x1', d => xScale(d))
+                .attr('x2', d => xScale(d))
+                .attr('y1', 0)
+                .attr('y2', size.height)
+                .attr('class', d => {
+                    if (d.toPrecision(4) % (gridInterval * 5) === 0)
+                        return 'thick-line';
+                });
     }
-    let yGrid = tickValues => {
-        svg.select('.ygrid')
-            .selectAll('line')
-            .data(tickValues)
+    let yGrid = g => {
+        let gridInterval = interval(plotRanges[0], [8, 25]) / 5;
+        let gridValues = fillRange(gridInterval, plotRanges[1]);
+        g.selectAll('line')
+            .data(gridValues)
             .join(g => g.append('line'))
             .attr('x1', 0)
             .attr('x2', size.width)
             .attr('y1', d => yScale(d))
-            .attr('y2', d => yScale(d));
+            .attr('y2', d => yScale(d))
+            .attr('class', d => {
+                if (d.toPrecision(4) % (gridInterval * 5) === 0)
+                    return 'thick-line';
+            })
     }
 
     let line = d3.line()
@@ -118,10 +112,14 @@ export function plotter() {
         .y(d => yScale(d.y));
 
     let defTr = d3.transition().duration(200);
-
-    svg.append('g').attr('class', 'xgrid');
-    svg.append('g').attr('class', 'ygrid');
-
+    
+    svg.append('g')
+        .attr('class', 'xgrid')
+        .call(xGrid);
+    svg.append('g')
+        .attr('class', 'ygrid')
+        .call(yGrid);
+    
     svg.append('g')
         .attr('class', 'xaxis')
         .attr('transform', `translate(0, ${size.height / 2})`)
@@ -194,8 +192,10 @@ export function plotter() {
     function resize() {
         xScale.domain(plotRanges[0]);
         yScale.domain(plotRanges[1]);
-        svg.select('.xaxis').call(xAxis);
-        svg.select('.yaxis').call(yAxis);
+        svg.select('.xaxis').transition().call(xAxis);
+        svg.select('.yaxis').transition().call(yAxis);
+        svg.select('.xgrid').call(xGrid);
+        svg.select('.ygrid').call(yGrid);
         draw();
     }
 
