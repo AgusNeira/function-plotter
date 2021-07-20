@@ -6,16 +6,10 @@ export function plotter() {
         aspectRatio = size.height / size.width,
         resolution = 500, // points used to draw the function
         tickAmount = 20,
-        plotRanges = [[-109, 109], [-109 * aspectRatio, 109 * aspectRatio]],
+        plotRanges = [[-11, 11], [-11 * aspectRatio, 11 * aspectRatio]],
         data = [],
         zoomDelay = 200,
         zoomInterval = 1.25;
-
-    let xTicks = Array(tickAmount).fill(0).map((x, i) => i / tickAmount)
-        .filter(x => x < 1 && x > 0 && x !== 0.5);
-    let yTicks = Array(tickAmount).fill(0)
-        .map((y, i) => (i / tickAmount - 0.5) / aspectRatio + 0.5)
-        .filter(y => y > 0 && y < 1 && y !== 0.5);
 
     let svg = d3.select('#plot-space')
         .append('svg')
@@ -53,10 +47,14 @@ export function plotter() {
             .axisBottom(xScale)
             .tickValues(tickValues)
             .tickFormat(d => {
-                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
-                else return d.toPrecision(3);
+                let digits = Math.abs(Math.log10(Math.abs(d)));
+                if (digits >= 3) return d.toExponential(2)
+                else return d.toPrecision(Math.floor(digits) + 1);
             })
+            .tickSize(0)
+            .tickPadding(8)
         );
+        xGrid(tickValues);
     };
     let yAxis = g => {
         let yRange = plotRanges[1][1] - plotRanges[1][0];
@@ -82,10 +80,36 @@ export function plotter() {
             .axisLeft(yScale)
             .tickValues(tickValues)
             .tickFormat(d => {
-                if (Math.abs(Math.log10(Math.abs(d))) >= 3) return d.toExponential(2)
-                else return d.toPrecision(3);
+                let digits = Math.abs(Math.log10(Math.abs(d)));
+                if (digits >= 3) return d.toExponential(2)
+                else return d.toPrecision(Math.floor(digits) + 1);
             })
+            .tickSize(0)
+            .tickPadding(5)
         );
+        yGrid(tickValues);
+    }
+    let xGrid = tickValues => {
+        console.log('reached')
+        console.log(tickValues);
+        svg.select('.xgrid')
+            .selectAll('line')
+            .data(tickValues)
+            .join(g => g.append('line'))
+            .attr('x1', d => xScale(d))
+            .attr('x2', d => xScale(d))
+            .attr('y1', 0)
+            .attr('y2', size.height);
+    }
+    let yGrid = tickValues => {
+        svg.select('.ygrid')
+            .selectAll('line')
+            .data(tickValues)
+            .join(g => g.append('line'))
+            .attr('x1', 0)
+            .attr('x2', size.width)
+            .attr('y1', d => yScale(d))
+            .attr('y2', d => yScale(d));
     }
 
     let line = d3.line()
@@ -94,6 +118,9 @@ export function plotter() {
         .y(d => yScale(d.y));
 
     let defTr = d3.transition().duration(200);
+
+    svg.append('g').attr('class', 'xgrid');
+    svg.append('g').attr('class', 'ygrid');
 
     svg.append('g')
         .attr('class', 'xaxis')
@@ -167,8 +194,8 @@ export function plotter() {
     function resize() {
         xScale.domain(plotRanges[0]);
         yScale.domain(plotRanges[1]);
-        svg.select('.xaxis').transition().call(xAxis);
-        svg.select('.yaxis').transition().call(yAxis);
+        svg.select('.xaxis').call(xAxis);
+        svg.select('.yaxis').call(yAxis);
         draw();
     }
 
@@ -183,9 +210,6 @@ export function plotter() {
         let midpoints = plotRanges.map(([min, max]) => (max + min) / 2);
         let deltas = midpoints.map((mid, index) => mid - plotRanges[index][0] * factor);
         plotRanges = midpoints.map((mid, index) => [mid - deltas[index], mid + deltas[index]]);
-        console.log(plotRanges);
-        console.log(midpoints);
-        console.log(deltas);
         resize();
     }
     function rescaleX (factor) {
