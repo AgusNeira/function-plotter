@@ -181,24 +181,24 @@ export function plotter() {
 
     function rescaleAll(factor) {
         let midpoints = plotRanges.map(([min, max]) => (max + min) / 2);
-        let delta = (midpoints[0] - plotRanges[0][0]) * factor;
-        plotRanges = midpoints.map(mid => [mid - delta, mid + delta]);
+        let deltas = midpoints.map((mid, index) => mid - plotRanges[index][0] * factor);
+        plotRanges = midpoints.map((mid, index) => [mid - deltas[index], mid + deltas[index]]);
+        console.log(plotRanges);
+        console.log(midpoints);
+        console.log(deltas);
         resize();
-        console.log('all')
     }
     function rescaleX (factor) {
         let midpointX = (plotRanges[0][0] + plotRanges[0][1]) / 2;
         let deltaX = (midpointX - plotRanges[0][0]) * factor;
         plotRanges[0] = [midpointX - deltaX, midpointX + deltaX];
         resize();
-        console.log('x');
     }
     function rescaleY (factor) {
         let midpointY = (plotRanges[1][0] + plotRanges[1][1]) / 2;
         let deltaY = (midpointY - plotRanges[1][0]) * factor;
         plotRanges[1] = [midpointY - deltaY, midpointY + deltaY];
         resize();
-        console.log('y');
     }
 
     // the rescaling is performed only after a set delay time has passed
